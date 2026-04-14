@@ -1,2 +1,2 @@
-# realidad_aumentada_virtual
-Repositorio de contenidos sobre realidad aumentada y realidad virtual
+# Realidad_aumentada_ejemplo
+Ejemplo de creación de contenidos educativos de realidad aumentada

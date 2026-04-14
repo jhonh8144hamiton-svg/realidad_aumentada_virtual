@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ejemplo</title>
+<meta name="author" content="Florentino Blas Fernández Cueto">
+<meta name="description" content="Se trata de un curso de 12 horas sobre realidad aumentada en el CFR de Ferrol">
+<script src="./libs/mindar/mindar-image-three.prod.js"></script>
+<style>
+  html, body { position: relative; margin: 0; width: 100%; height: 100%; overflow: hidden; background: transparent; font-family: 'Segoe UI', Arial, sans-serif; }
+  .filler-a{outline:0}
+  .filler-z{outline:0}
+  #camera-error {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(10,14,26,0.95);
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    color: #ff7a7a;
+    text-align: center;
+    padding: 20px;
+  }
+  #camera-error h3 { color: #e0e8f8; margin-bottom: 15px; font-size: 1.5rem; }
+  #camera-error button {
+    background: rgba(20,80,120,0.8);
+    color: #fff;
+    border: 1px solid #1a6fa8;
+    padding: 10px 24px;
+    margin-top: 15px;
+    cursor: pointer;
+    border-radius: 6px;
+  }
+</style>
+</head>
+<body>
+<div id="camera-error">
+  <h3>📷 ERROR DE CÁMARA</h3>
+  <p id="camera-error-msg">No se pudo acceder a la cámara.</p>
+  <button onclick="location.reload()">🔄 REINTENTAR</button>
+</div>
+<script type="module">
+import { CSS3DObject } from './libs/three.js-r132/examples/jsm/renderers/CSS3DRenderer.js';
+import {loadGLTF, loadTexture, loadTextures, loadVideo} from './libs/loader.js';
+const THREE = window.MINDAR.IMAGE.THREE;
+let portfolioItem4Video = null;
+let portfolioGroup = null;
+let avatarSurfaceGroup = null;
+let card = null;
+let dynamicButtons = [];
+let anchor = null;
+let appStartTime = 0;
+let visibilityTimeouts = [];
+const clock = new THREE.Clock();
+function showCameraError(message) {
+  const overlay = document.getElementById('camera-error');
+  const msg = document.getElementById('camera-error-msg');
+  if (msg) msg.textContent = message;
+  if (overlay) overlay.style.display = 'flex';
+}
+function hideCameraError() {
+  const overlay = document.getElementById('camera-error');
+  if (overlay) overlay.style.display = 'none';
+}
+function setupMarkerEvents(anchorRef, videoRef, portfolioGroupRef, avatarGroupRef, cardRef, buttonsRef, delays) {
+  if (!anchorRef) return;
+  anchorRef.onTargetFound = () => {
+    if (cardRef) cardRef.visible = true;
+    const now = Date.now();
+    const elapsed = now - appStartTime;
+    const scheduleVisibility = (element, delayMs, onVisible) => {
+        if (!element) return;
+        if (elapsed >= delayMs) {
+            element.visible = true;
+            if (onVisible) onVisible();
+        } else {
+            const remaining = delayMs - elapsed;
+            visibilityTimeouts.push(setTimeout(() => {
+                element.visible = true;
+                if (onVisible) onVisible();
+            }, remaining));
+        }
+    };
+    scheduleVisibility(portfolioGroupRef, delays.video, () => {
+        if (videoRef && videoRef.paused) videoRef.play().catch(e => console.warn('Autoplay play error:', e));
+    });
+    if (delays.mdlVisible) {
+        scheduleVisibility(avatarGroupRef, delays.model);
+    }
+    if (buttonsRef && Array.isArray(buttonsRef)) {
+        buttonsRef.forEach(btn => scheduleVisibility(btn, btn.userData.delay || 0));
+    }
+  };
+  anchorRef.onTargetLost = () => {
+    visibilityTimeouts.forEach(clearTimeout);
+    visibilityTimeouts = [];
+    if (portfolioGroupRef) portfolioGroupRef.visible = false;
+    if (avatarGroupRef) avatarGroupRef.visible = false;
+    if (cardRef) cardRef.visible = false;
+    if (buttonsRef && Array.isArray(buttonsRef)) buttonsRef.forEach(btn => { if (btn) btn.visible = false; });
+    if (videoRef && !videoRef.paused) videoRef.pause();
+  };
+}
+document.addEventListener('DOMContentLoaded', () => {
+  const start = async () => {
+    try {
+      const mindarThree = new window.MINDAR.IMAGE.MindARThree({
+        container: document.body,
+        imageTargetSrc: './Ejemplo.mind',
+      });
+      const {renderer, cssRenderer, scene, cssScene, camera} = mindarThree;
+      const light = new THREE.HemisphereLight(0xffff, 0xbbbbff, 1);
+      scene.add(light);
+      const [cardTexture] = await loadTextures(['./Ejemplo.png']);
+      const planeGeometry = new THREE.PlaneGeometry(1, 0.875);
+      const cardMaterial = new THREE.MeshBasicMaterial({map: cardTexture});
+      card = new THREE.Mesh(planeGeometry, cardMaterial);
+      const createButtonTexture = (text, colorBg = '#0B3D91', colorTxt = '#FFFFFF') => {
+        const canvas = document.createElement('canvas');
+        canvas.width = 153; canvas.height = 45;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = colorBg; ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = colorTxt; ctx.font = 'bold 20px Arial';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(text, canvas.width / 2, canvas.height / 2);
+        return new THREE.CanvasTexture(canvas);
+      };
+      const buttonsConfig = [{"name":"CFR Ferrol","url":"https://www.edu.xunta.gal/portal/cfrferrol/","delay":"2","posX":"-0.4","posY":"-0.36","posZ":"0.05","scale":"1","rotX":"70","colorBg":"#0b3d91","colorTxt":"#ffffff"},{"name":"Tutoriales","url":"https://www.futureworkss.com/curso_ra_2026/curso_RA_2026.html","delay":"10","posX":"0.01","posY":"-0.2","posZ":"0.09","scale":"1","rotX":"70","colorBg":"#2f930b","colorTxt":"#ffffff"},{"name":"Xunta","url":"https://www.edu.xunta.gal/portalweb/index.html","delay":"20","posX":"0.48","posY":"-0.36","posZ":"0.08","scale":"1.32","rotX":"70","colorBg":"#ffffff","colorTxt":"#046ffb"},{"name":"Realidad virtual","url":"https://www.futureworkss.com/curso_ra_2026/Actividad_sobre_el_Barroco.html","delay":"15","posX":"-0.52","posY":"-0.2","posZ":"0.2","scale":"1","rotX":"70","colorBg":"#3e2e14","colorTxt":"#ffffff"}];
+      dynamicButtons = [];
+      const buttonGeometry = new THREE.PlaneGeometry(0.3, 0.094);
+      buttonsConfig.forEach((btnCfg, index) => {
+        const btnLabel = btnCfg.name || btnCfg.label || ('Botón ' + (index + 1));
+        const colorBg = btnCfg.colorBg || '#0B3D91';
+        const colorTxt = btnCfg.colorTxt || '#FFFFFF';
+        const btnMesh = new THREE.Mesh(buttonGeometry, new THREE.MeshBasicMaterial({map: createButtonTexture(btnLabel, colorBg, colorTxt)}));
+        
+        const rotX = btnCfg.rotX !== undefined ? parseFloat(btnCfg.rotX) : 70;
+        const posX = btnCfg.posX !== undefined ? parseFloat(btnCfg.posX) : -0.4;
+        const posY = btnCfg.posY !== undefined ? parseFloat(btnCfg.posY) : 0;
+        const posZ = btnCfg.posZ !== undefined ? parseFloat(btnCfg.posZ) : 0.1;
+        const bScale = btnCfg.scale !== undefined ? parseFloat(btnCfg.scale) : 1;
+        const bDelay = btnCfg.delay !== undefined ? parseFloat(btnCfg.delay) * 1000 : 0;
+        
+        btnMesh.rotation.x = (rotX * Math.PI) / 180;
+        btnMesh.position.set(posX, posY, posZ);
+        btnMesh.scale.set(bScale, bScale, bScale);
+        btnMesh.userData = { clickable: true, isDynamicButton: true, url: btnCfg.url, baseScale: bScale, delay: bDelay };
+        btnMesh.material.transparent = true;
+        btnMesh.material.depthTest = false;
+        btnMesh.material.depthWrite = false;
+        btnMesh.renderOrder = 1000;
+        dynamicButtons.push(btnMesh);
+      });
+      portfolioItem4Video = await loadVideo("./Ejemplo.webm");
+      portfolioItem4Video.muted = false;
+      const portfolioItem4VideoTexture = new THREE.VideoTexture(portfolioItem4Video);
+      const videoGeometry = new THREE.PlaneGeometry(0.75, 1);
+      const portfolioItem4VideoMaterial = new THREE.ShaderMaterial({
+        uniforms: { videoTexture: { value: portfolioItem4VideoTexture }, threshold: { value: 0.03 } },
+        vertexShader: `varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
+        fragmentShader: `uniform sampler2D videoTexture; uniform float threshold; varying vec2 vUv; void main() { vec4 texColor = texture2D(videoTexture, vUv); float luminance = dot(texColor.rgb, vec3(0.299, 0.587, 0.114)); if (luminance < threshold) discard; gl_FragColor = texColor; }`,
+        transparent: true, side: THREE.DoubleSide
+      });
+      const videoMesh = new THREE.Mesh(videoGeometry, portfolioItem4VideoMaterial);
+      const videoScale = 1.2;
+      videoMesh.scale.set(videoScale, videoScale, 1);
+      const videoSurfaceGroup = new THREE.Group();
+      videoSurfaceGroup.rotation.x = (70 * Math.PI) / 180;
+      videoSurfaceGroup.position.set(0.25, 0, 0.03);
+      const vH = 0.875 * videoScale;
+      const centerLY = (0.875 / 2) + (vH / 2) - 0.01;
+      videoMesh.position.set(-0.3, centerLY - 0.5, 0);
+      videoMesh.material.depthTest = false;
+      videoMesh.material.depthWrite = false;
+      videoMesh.renderOrder = 999;
+      videoSurfaceGroup.add(videoMesh);
+      
+      // LOGICA DE TEXTURA EN LA PÁGINA GENERADA: Se inyecta la textura base64 de manera segura
+      const textureBase64Str = "";
+      let customModelTexture = null;
+      if (textureBase64Str && textureBase64Str.startsWith("data:image")) {
+          const textureLoader = new THREE.TextureLoader();
+          try {
+              customModelTexture = await new Promise((resolve, reject) => {
+                  textureLoader.load(textureBase64Str, resolve, undefined, reject);
+              });
+              customModelTexture.flipY = false;
+              if (THREE.sRGBEncoding) customModelTexture.encoding = THREE.sRGBEncoding;
+          } catch(e) {
+              console.error("Error loading base64 texture", e);
+          }
+      }
+ 
+      // MODIFICADO: Carga del modelo dinámico indicado en el fichero TXT mediante su modelName
+      const avatar = await loadGLTF('./Ejemplo.gltf', {});
+      avatar.scene.scale.set(0.002, 0.002, 0.002);
+      
+      // CENTRADO GEOMÉTRICO PARA EL HTML HORNEADO
+      avatar.scene.updateMatrixWorld(true);
+      const box = new THREE.Box3().setFromObject(avatar.scene);
+      const center = box.getCenter(new THREE.Vector3());
+      avatar.scene.position.set(-center.x, -center.y, -center.z);
+      
+      const avatarPivot = new THREE.Group();
+      avatarPivot.add(avatar.scene);
+      avatarPivot.visible = true;
+
+      avatar.scene.traverse((child) => {
+        if (child.isMesh && child.material) {
+          let modelColor = 0xFF00FF;
+          const colorStr = 'f3f708';
+          if (colorStr) {
+            modelColor = parseInt(colorStr, 16);
+          }
+          
+          const matOpts = {};
+          if (customModelTexture) {
+              matOpts.map = customModelTexture;
+              matOpts.color = 0xFFFFFF; // Evita teñir la textura base64
+          } else if (child.material.map) {
+              matOpts.map = child.material.map;
+              matOpts.color = child.material.color || 0xFFFFFF; // Mantiene el color nativo si existe, o blanco para dejar la imagen visible
+          } else {
+              matOpts.color = modelColor; // Aplica el color del TXT a las partes sin textura
+          }
+          
+          child.material = new THREE.MeshLambertMaterial(matOpts);
+          child.material.depthTest = false; child.material.depthWrite = false; child.renderOrder = 1001;
+          child.userData.clickable = true;
+          child.userData.isAvatar = true;
+        }
+      });
+      avatarSurfaceGroup = new THREE.Group();
+      avatarSurfaceGroup.rotation.x = (90 * Math.PI) / 180;
+      avatarSurfaceGroup.position.set(0.63, -0.17, 0.46);
+      
+      // El pivot centralizado se añade al grupo principal
+      avatarSurfaceGroup.add(avatarPivot);
+      
+      portfolioGroup = new THREE.Group();
+      portfolioGroup.add(videoSurfaceGroup);
+      
+      // INICIAR MINDAR
+      await mindarThree.start();
+      hideCameraError();
+      appStartTime = Date.now();
+ 
+      anchor = mindarThree.addAnchor(0);
+      anchor.group.add(avatarSurfaceGroup, card, portfolioGroup);
+      dynamicButtons.forEach(btn => anchor.group.add(btn));
+      
+      // Ocultar objetos hasta que se detecte el marcador
+      portfolioGroup.visible = false;
+      avatarSurfaceGroup.visible = false;
+      card.visible = false;
+      dynamicButtons.forEach(btn => btn.visible = false);
+      
+      const delays = { video: 0, model: 5000, mdlVisible: true };
+      setupMarkerEvents(anchor, portfolioItem4Video, portfolioGroup, avatarSurfaceGroup, card, dynamicButtons, delays);
+      
+      [videoMesh, avatarPivot].forEach(o => { o.userData = { clickable: true }; });
+      document.body.addEventListener('click', (e) => {
+        const mouse = new THREE.Vector2((e.clientX / window.innerWidth) * 2 - 1, -(e.clientY / window.innerHeight) * 2 + 1);
+        const raycaster = new THREE.Raycaster(); raycaster.setFromCamera(mouse, camera);
+        const intersects = raycaster.intersectObjects(scene.children, true);
+        if (intersects.length > 0) {
+          let o = intersects[0].object; while (o.parent && !o.userData.clickable) o = o.parent;
+          if (o.userData.clickable) {
+            if (o.userData.isAvatar) window.open("https://www.tecnologiaseducativas.es/", "_blank");
+            else if (o.userData.isDynamicButton && o.userData.url) window.open(o.userData.url, "_blank");
+            else if (o === videoMesh) { if (portfolioItem4Video.paused) portfolioItem4Video.play(); else portfolioItem4Video.pause(); }
+          }
+        }
+      });
+      
+      // Rotaciones base a cero por el reajuste del Bounding Box
+      const baseRotationX = 0;
+      const baseRotationY = 0;
+      const baseRotationZ = 0;
+      const rotationSpeed = -0.25;
+      const spinAxis = 'y';
+      
+      renderer.setAnimationLoop(() => {
+        const elapsed = clock.getElapsedTime();
+        const bS = 1 + 0.05 * Math.sin(elapsed * 3);
+        dynamicButtons.forEach(b => {
+          const s = b.userData.baseScale * bS;
+          b.scale.set(s, s, s);
+        });
+        
+        if (spinAxis === 'x') {
+            avatarPivot.rotation.x = baseRotationX + elapsed * rotationSpeed;
+        } else if (spinAxis === 'y') {
+            avatarPivot.rotation.y = baseRotationY + elapsed * rotationSpeed;
+        } else if (spinAxis === 'z') {
+            avatarPivot.rotation.z = baseRotationZ + elapsed * rotationSpeed;
+        }
+        
+        renderer.render(scene, camera);
+        cssRenderer.render(cssScene, camera);
+      });
+    } catch (err) {
+      console.error('Fatal error in baked start():', err);
+      showCameraError('Error: ' + err.message);
+    }
+  };
+  start();
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,74 @@
+{
+  "buttons": [
+    {
+      "name": "CFR Ferrol",
+      "url": "https://www.edu.xunta.gal/portal/cfrferrol/",
+      "delay": "2",
+      "posX": "-0.4",
+      "posY": "-0.36",
+      "posZ": "0.05",
+      "scale": "1",
+      "rotX": "70",
+      "colorBg": "#0b3d91",
+      "colorTxt": "#ffffff"
+    },
+    {
+      "name": "Tutoriales",
+      "url": "https://www.futureworkss.com/curso_ra_2026/curso_RA_2026.html",
+      "delay": "10",
+      "posX": "0.01",
+      "posY": "-0.2",
+      "posZ": "0.09",
+      "scale": "1",
+      "rotX": "70",
+      "colorBg": "#2f930b",
+      "colorTxt": "#ffffff"
+    },
+    {
+      "name": "Xunta",
+      "url": "https://www.edu.xunta.gal/portalweb/index.html",
+      "delay": "20",
+      "posX": "0.48",
+      "posY": "-0.36",
+      "posZ": "0.08",
+      "scale": "1.32",
+      "rotX": "70",
+      "colorBg": "#ffffff",
+      "colorTxt": "#046ffb"
+    },
+    {
+      "name": "Realidad virtual",
+      "url": "https://www.futureworkss.com/curso_ra_2026/Actividad_sobre_el_Barroco.html",
+      "delay": "15",
+      "posX": "-0.52",
+      "posY": "-0.2",
+      "posZ": "0.2",
+      "scale": "1",
+      "rotX": "70",
+      "colorBg": "#3e2e14",
+      "colorTxt": "#ffffff"
+    }
+  ],
+  "video": {
+    "delay": "0",
+    "posX": "0.25",
+    "posY": "0",
+    "posZ": "0.03",
+    "scale": "1.2",
+    "rotX": "70"
+  },
+  "model": {
+    "visible": true,
+    "modelName": "Ejemplo.gltf",
+    "delay": "5",
+    "color": "#f3f708",
+    "texture": null,
+    "posX": "0.63",
+    "posY": "-0.17",
+    "posZ": "0.46",
+    "scale": "0.002",
+    "rotX": "90",
+    "spinAxis": "y",
+    "spinSpeed": "-0.25"
+  }
+}
