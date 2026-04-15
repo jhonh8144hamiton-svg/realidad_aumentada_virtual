@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ejemplo</title>
+<title>Ejemplo22</title>
 <meta name="author" content="Florentino Blas Fernández Cueto">
 <meta name="description" content="Se trata de un curso de 12 horas sobre realidad aumentada en el CFR de Ferrol">
-<script src="./libs/mindar/mindar-image-three.prod.js"></script>
+<script src="https://www.futureworkss.com/A1e6_uPlW2_l3MA4wQ5uc6E7FL9BA/libs/mindar/mindar-image-three.prod.js"></script>
 <style>
   html, body { position: relative; margin: 0; width: 100%; height: 100%; overflow: hidden; background: transparent; font-family: 'Segoe UI', Arial, sans-serif; }
   .filler-a{outline:0}
@@ -43,8 +43,8 @@
   <button onclick="location.reload()">🔄 REINTENTAR</button>
 </div>
 <script type="module">
-import { CSS3DObject } from './libs/three.js-r132/examples/jsm/renderers/CSS3DRenderer.js';
-import {loadGLTF, loadTexture, loadTextures, loadVideo} from './libs/loader.js';
+import { CSS3DObject } from 'https://www.futureworkss.com/A1e6_uPlW2_l3MA4wQ5uc6E7FL9BA/libs/three.js-r132/examples/jsm/renderers/CSS3DRenderer.js';
+import {loadGLTF, loadTexture, loadTextures, loadVideo} from 'https://www.futureworkss.com/A1e6_uPlW2_l3MA4wQ5uc6E7FL9BA/libs/loader.js';
 const THREE = window.MINDAR.IMAGE.THREE;
 let portfolioItem4Video = null;
 let portfolioGroup = null;
@@ -128,7 +128,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.fillText(text, canvas.width / 2, canvas.height / 2);
         return new THREE.CanvasTexture(canvas);
       };
-      const buttonsConfig = [{"name":"CFR Ferrol","url":"https://www.edu.xunta.gal/portal/cfrferrol/","delay":"2","posX":"-0.4","posY":"-0.36","posZ":"0.05","scale":"1","rotX":"70","colorBg":"#0b3d91","colorTxt":"#ffffff"},{"name":"Tutoriales","url":"https://www.futureworkss.com/curso_ra_2026/curso_RA_2026.html","delay":"10","posX":"0.01","posY":"-0.2","posZ":"0.09","scale":"1","rotX":"70","colorBg":"#2f930b","colorTxt":"#ffffff"},{"name":"Xunta","url":"https://www.edu.xunta.gal/portalweb/index.html","delay":"20","posX":"0.48","posY":"-0.36","posZ":"0.08","scale":"1.32","rotX":"70","colorBg":"#ffffff","colorTxt":"#046ffb"},{"name":"Realidad virtual","url":"https://www.futureworkss.com/curso_ra_2026/Actividad_sobre_el_Barroco.html","delay":"15","posX":"-0.52","posY":"-0.2","posZ":"0.2","scale":"1","rotX":"70","colorBg":"#3e2e14","colorTxt":"#ffffff"}];
+      const buttonsConfig = [{"name":"CFR Ferrol","url":"https://www.edu.xunta.gal/portal/cfrferrol/","delay":"5","posX":"-0.4","posY":"-0.36","posZ":"0.05","scale":"1","rotX":"70","colorBg":"#0b3d91","colorTxt":"#ffffff"},{"name":"Tutoriales","url":"https://www.futureworkss.com/curso_ra_2026/curso_RA_2026.html","delay":"20","posX":"0.01","posY":"-0.2","posZ":"0.09","scale":"1","rotX":"70","colorBg":"#2f930b","colorTxt":"#ffffff"},{"name":"Xunta","url":"https://www.edu.xunta.gal/portalweb/index.html","delay":"30","posX":"0.48","posY":"-0.36","posZ":"0.08","scale":"1.32","rotX":"70","colorBg":"#ffffff","colorTxt":"#046ffb"},{"name":"Realidad virtual","url":"https://www.futureworkss.com/curso_ra_2026/Actividad_sobre_el_Barroco.html","delay":"15","posX":"-0.52","posY":"-0.2","posZ":"0.2","scale":"1","rotX":"70","colorBg":"#3e2e14","colorTxt":"#ffffff"}];
       dynamicButtons = [];
       const buttonGeometry = new THREE.PlaneGeometry(0.3, 0.094);
       buttonsConfig.forEach((btnCfg, index) => {
@@ -196,7 +196,7 @@ document.addEventListener('DOMContentLoaded', () => {
  
       // MODIFICADO: Carga del modelo dinámico indicado en el fichero TXT mediante su modelName
       const avatar = await loadGLTF('./Ejemplo.gltf', {});
-      avatar.scene.scale.set(0.002, 0.002, 0.002);
+      avatar.scene.scale.set(0.0016, 0.0016, 0.0016);
       
       // CENTRADO GEOMÉTRICO PARA EL HTML HORNEADO
       avatar.scene.updateMatrixWorld(true);
@@ -211,7 +211,7 @@ document.addEventListener('DOMContentLoaded', () => {
       avatar.scene.traverse((child) => {
         if (child.isMesh && child.material) {
           let modelColor = 0xFF00FF;
-          const colorStr = 'f3f708';
+          const colorStr = 'e1aef9';
           if (colorStr) {
             modelColor = parseInt(colorStr, 16);
           }
@@ -234,7 +234,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       });
       avatarSurfaceGroup = new THREE.Group();
-      avatarSurfaceGroup.rotation.x = (90 * Math.PI) / 180;
+      avatarSurfaceGroup.rotation.x = (57 * Math.PI) / 180;
       avatarSurfaceGroup.position.set(0.63, -0.17, 0.46);
       
       // El pivot centralizado se añade al grupo principal
@@ -258,7 +258,7 @@ document.addEventListener('DOMContentLoaded', () => {
       card.visible = false;
       dynamicButtons.forEach(btn => btn.visible = false);
       
-      const delays = { video: 0, model: 5000, mdlVisible: true };
+      const delays = { video: 0, model: 10000, mdlVisible: true };
       setupMarkerEvents(anchor, portfolioItem4Video, portfolioGroup, avatarSurfaceGroup, card, dynamicButtons, delays);
       
       [videoMesh, avatarPivot].forEach(o => { o.userData = { clickable: true }; });
@@ -280,7 +280,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const baseRotationX = 0;
       const baseRotationY = 0;
       const baseRotationZ = 0;
-      const rotationSpeed = -0.25;
+      const rotationSpeed = -0.05;
       const spinAxis = 'y';
       
       renderer.setAnimationLoop(() => {
